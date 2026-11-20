@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StatLab Studio | ห้องปฏิบัติการเก็บข้อมูลและวิเคราะห์สถิติเพื่อการเรียนรู้</title>
+  <!-- Google Fonts: Sarabun & Prompt -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Sarabun', 'sans-serif'],
+            heading: ['Prompt', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-indigo-900 via-brand-700 to-indigo-800 text-white shadow-lg sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center text-xl font-bold shadow-inner border border-white/20">
+          📊
+        </div>
+        <div>
+          <h1 class="font-heading text-lg sm:text-xl font-bold tracking-tight flex items-center gap-2">
+            StatLab Studio
+            <span class="text-xs font-normal bg-amber-400/20 text-amber-200 border border-amber-300/30 px-2.5 py-0.5 rounded-full">สื่อการสอนวิชาสถิติ</span>
+          </h1>
+          <p class="text-xs text-indigo-100">จำลองการกำหนดตัวแปร เก็บข้อมูลแบบสอบถาม 5 ระดับ วิเคราะห์ผล และฝึกอ่านตารางสถิติ</p>
+        </div>
+      </div>
+
+      <!-- Preset Selector & Quick Actions -->
+      <div class="flex flex-wrap items-center gap-2">
+        <span id="autoSaveStatus" class="text-[11px] bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-2.5 py-1 rounded-full flex items-center gap-1" title="ข้อมูลที่นักศึกษาทำจะถูกบันทึกไว้ในเครื่องอัตโนมัติ">
+          <span>💾</span> บันทึกอัตโนมัติแล้ว
+        </span>
+        <label for="presetSelect" class="text-xs text-indigo-100 font-medium hidden sm:inline">โจทย์ตัวอย่าง:</label>
+        <select id="presetSelect" class="bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm rounded-lg px-3 py-2 border border-white/20 focus:outline-none focus:ring-2 focus:ring-amber-300 transition cursor-pointer">
+          <option value="student_cafe" class="text-slate-800">☕ ตัวอย่างที่ 1: ความพึงพอใจบริการมหาวิทยาลัย (N=36)</option>
+          <option value="teaching_method" class="text-slate-800">📚 ตัวอย่างที่ 2: เปรียบเทียบวิธีสอน 3 รูปแบบ (N=30)</option>
+          <option value="health_sleep" class="text-slate-800">💤 ตัวอย่างที่ 3: พฤติกรรมสุขภาพและการนอนหลับ (N=32)</option>
+          <option value="custom_blank" class="text-slate-800">✨ เริ่มสร้างหัวข้อใหม่ของตนเอง (ตารางเปล่า N=0)</option>
+        </select>
+        <button id="btnLoadPreset" class="bg-amber-400 hover:bg-amber-300 text-slate-900 font-heading font-semibold text-xs sm:text-sm px-3.5 py-2 rounded-lg shadow transition flex items-center gap-1.5" title="โหลดข้อมูลตัวอย่างตามที่เลือก หรือรีเซ็ตกลับค่าเริ่มต้น">
+          <span>🔄</span> โหลด / รีเซ็ตโจทย์
+        </button>
+      </div>
+    </div>
+
+    <!-- Step Navigation Tabs -->
+    <div class="bg-indigo-950/60 border-t border-white/10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto no-scrollbar">
+        <button data-tab="tab-design" class="nav-tab active-tab font-heading text-xs sm:text-sm py-3 px-4 sm:px-6 border-b-2 font-medium flex items-center gap-2 whitespace-nowrap transition">
+          <span class="w-6 h-6 rounded-full bg-amber-400 text-slate-900 font-bold flex items-center justify-center text-xs">1</span>
+          ออกแบบตัวแปร (ต้น / ตาม 5 ระดับ)
+        </button>
+        <button data-tab="tab-collect" class="nav-tab font-heading text-xs sm:text-sm py-3 px-4 sm:px-6 border-b-2 border-transparent text-indigo-200 hover:text-white font-medium flex items-center gap-2 whitespace-nowrap transition">
+          <span class="w-6 h-6 rounded-full bg-indigo-800 text-indigo-200 font-bold flex items-center justify-center text-xs">2</span>
+          เก็บข้อมูลแบบสอบถาม 5 ระดับ (<span id="badgeCount">0</span>)
+        </button>
+        <button data-tab="tab-analyze" class="nav-tab font-heading text-xs sm:text-sm py-3 px-4 sm:px-6 border-b-2 border-transparent text-indigo-200 hover:text-white font-medium flex items-center gap-2 whitespace-nowrap transition">
+          <span class="w-6 h-6 rounded-full bg-indigo-800 text-indigo-200 font-bold flex items-center justify-center text-xs">3</span>
+          วิเคราะห์สถิติ & อ่านตารางผลลัพธ์
+        </button>
+        <button data-tab="tab-quiz" class="nav-tab font-heading text-xs sm:text-sm py-3 px-4 sm:px-6 border-b-2 border-transparent text-indigo-200 hover:text-white font-medium flex items-center gap-2 whitespace-nowrap transition">
+          <span class="w-6 h-6 rounded-full bg-indigo-800 text-indigo-200 font-bold flex items-center justify-center text-xs">4</span>
+          แบบฝึกหัดอ่านตารางสถิติ 🎯
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ==================== TAB 1: VARIABLE DESIGN ==================== -->
+    <section id="tab-design" class="tab-panel space-y-6">
+      <!-- Concept Banner -->
+      <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-brand-600 bg-brand-50 px-2.5 py-1 rounded-md">ขั้นตอนที่ 1 : การวางแผนการเก็บข้อมูล</span>
+            <h2 class="font-heading text-xl sm:text-2xl font-bold text-slate-800 mt-1" id="projectTitleDisplay">หัวข้อศึกษา: ความพึงพอใจต่อบริการมหาวิทยาลัย</h2>
+            <p class="text-sm text-slate-600 mt-0.5" id="projectDescDisplay">ให้นักศึกษาทำความเข้าใจความแตกต่างระหว่างตัวแปรต้น (อิสระ) ที่ใช้แบ่งกลุ่มผู้ตอบ และตัวแปรตามที่เก็บเป็นระดับความคิดเห็น 5 ระดับ (Likert Scale 1-5)</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 self-start md:self-center">
+            <button id="btnStartBlankProject" class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-heading font-medium px-3 py-2 rounded-lg transition flex items-center gap-1" title="ล้างตัวแปรและข้อมูลตัวอย่างเพื่อออกแบบหัวข้อของตนเองตั้งแต่ศูนย์">
+              ✨ เริ่มหัวข้อใหม่ของตนเอง
+            </button>
+            <button id="btnEditProjectTitle" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-2 rounded-lg transition">
+              ✏️ แก้ไขชื่อหัวข้อวิจัย
+            </button>
+            <button id="btnGoToCollect" class="text-xs sm:text-sm bg-brand-600 hover:bg-brand-700 text-white font-heading font-medium px-4 py-2 rounded-lg shadow-sm transition flex items-center gap-1.5">
+              ไปหน้าเก็บข้อมูล <span>→</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Educational Comparison Cards: IV vs DV -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+          <!-- Independent Variables (ตัวแปรต้น / ตัวแปรอิสระ) -->
+          <div class="bg-sky-50/70 border border-sky-200 rounded-xl p-5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-2">
+                  <span class="w-8 h-8 rounded-lg bg-sky-600 text-white flex items-center justify-center font-bold text-sm">IV</span>
+                  <div>
+                    <h3 class="font-heading font-bold text-sky-950 text-base">ตัวแปรต้น / ตัวแปรอิสระ (Independent Variable)</h3>
+                    <p class="text-xs text-sky-700">ข้อมูลส่วนบุคคล / ตัวแปรจัดกลุ่ม (Categorical)</p>
+                  </div>
+                </div>
+                <span class="text-xs font-semibold bg-sky-100 text-sky-800 px-2.5 py-1 rounded-full border border-sky-200">ส่วนที่ 1 ของแบบสอบถาม</span>
+              </div>
+              <p class="text-xs sm:text-sm text-slate-700 leading-relaxed mb-4">
+                คือตัวแปรที่เป็น<strong>สาเหตุ</strong> หรือใช้<strong>จำแนกกลุ่มผู้ตอบแบบสอบถาม</strong>ออกเป็นหมวดหมู่ เช่น เพศ, ชั้นปี, คณะ, วิธีการสอน เพื่อเปรียบเทียบว่ากลุ่มที่ต่างกันมีระดับความคิดเห็น (ตัวแปรตาม) ต่างกันหรือไม่
+                <br><span class="text-sky-800 font-medium">• สถิติที่ใช้:</span> ความถี่ (Frequency), ร้อยละ (Percentage), ใช้แบ่งกลุ่มใน Independent t-test (2 กลุ่ม) และ One-Way ANOVA (3 กลุ่มขึ้นไป)
+              </p>
+
+              <!-- List of IVs -->
+              <div id="ivListContainer" class="space-y-2.5 mb-4"></div>
+            </div>
+
+            <!-- Add IV Form -->
+            <div class="bg-white p-3.5 rounded-lg border border-sky-200 mt-2">
+              <p class="text-xs font-heading font-semibold text-sky-900 mb-2">+ เพิ่มตัวแปรต้น (แบบแบ่งกลุ่ม)</p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                <input type="text" id="newIvLabel" placeholder="ชื่อตัวแปร เช่น คณะที่สังกัด" class="text-xs sm:text-sm border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                <input type="text" id="newIvOptions" placeholder="ตัวเลือก (คั่นด้วยจุลภาค) เช่น วิทย์, ศิลป์, บริหาร" class="text-xs sm:text-sm border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+              </div>
+              <button id="btnAddIv" class="w-full bg-sky-600 hover:bg-sky-700 text-white text-xs font-heading font-medium py-1.5 rounded-lg transition">
+                + เพิ่มตัวแปรต้น
+              </button>
+            </div>
+          </div>
+
+          <!-- Dependent Variables (ตัวแปรตาม 5 ระดับ) -->
+          <div class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-2">
+                  <span class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-sm">DV</span>
+                  <div>
+                    <h3 class="font-heading font-bold text-emerald-950 text-base">ตัวแปรตาม (Dependent Variable - 5 ระดับ)</h3>
+                    <p class="text-xs text-emerald-700">มาตรวัดประมาณค่า 5 ระดับ (5-Point Rating Scale: 1 ถึง 5)</p>
+                  </div>
+                </div>
+                <span class="text-xs font-semibold bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full border border-emerald-200">ส่วนที่ 2 ของแบบสอบถาม</span>
+              </div>
+              <p class="text-xs sm:text-sm text-slate-700 leading-relaxed mb-3">
+                คือประเด็นที่ต้องการวัดผลจากผู้ตอบแบบสอบถาม โดยให้เลือกตอบเป็นระดับคะแนน <strong>5 ระดับ</strong> ได้แก่
+                <span class="inline-block bg-white border border-emerald-200 rounded px-1.5 py-0.5 text-xs font-semibold text-emerald-900">5 = มากที่สุด</span>
+                <span class="inline-block bg-white border border-emerald-200 rounded px-1.5 py-0.5 text-xs font-semibold text-emerald-800">4 = มาก</span>
+                <span class="inline-block bg-white border border-emerald-200 rounded px-1.5 py-0.5 text-xs font-semibold text-amber-800">3 = ปานกลาง</span>
+                <span class="inline-block bg-white border border-emerald-200 rounded px-1.5 py-0.5 text-xs font-semibold text-orange-800">2 = น้อย</span>
+                <span class="inline-block bg-white border border-emerald-200 rounded px-1.5 py-0.5 text-xs font-semibold text-rose-800">1 = น้อยที่สุด</span>
+                <br><span class="text-emerald-800 font-medium">• สถิติที่ใช้:</span> ความถี่และร้อยละของแต่ละระดับ, ค่าเฉลี่ย (<span class="xbar">x</span>), ส่วนเบี่ยงเบนมาตรฐาน (S.D.), One-Sample t-test, Independent t-test และ One-Way ANOVA
+              </p>
+
+              <!-- List of DVs -->
+              <div id="dvListContainer" class="space-y-2.5 mb-4"></div>
+            </div>
+
+            <!-- Add DV Form -->
+            <div class="bg-white p-3.5 rounded-lg border border-emerald-200 mt-2">
+              <p class="text-xs font-heading font-semibold text-emerald-900 mb-2">+ เพิ่มข้อคำถาม / ตัวแปรตาม (5 ระดับ: 1-5 คะแนน)</p>
+              <div class="flex flex-col sm:flex-row gap-2 mb-2">
+                <input type="text" id="newDvLabel" placeholder="ชื่อประเด็น/ข้อคำถาม เช่น ความพึงพอใจด้านความสะอาด" class="flex-1 text-xs sm:text-sm border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              </div>
+              <button id="btnAddDv" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-heading font-medium py-1.5 rounded-lg transition">
+                + เพิ่มตัวแปรตาม (มาตรวัด 5 ระดับ)
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Criteria for Interpreting 5-Level Mean + How Variables Map to Statistical Tests -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- 5-Level Mean Interpretation Guide -->
+        <div class="lg:col-span-5 bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+          <h3 class="font-heading font-bold text-base text-slate-800 mb-2 flex items-center gap-2">
+            <span>📏</span> เกณฑ์การแปลความหมายค่าเฉลี่ย (<span class="xbar">x</span>) ข้อมูล 5 ระดับ
+          </h3>
+          <p class="text-xs text-slate-500 mb-3">
+            ความกว้างของอันตรภาคชั้น = (คะแนนสูงสุด 5 − คะแนนต่ำสุด 1) ÷ 5 = <strong>0.80 คะแนน</strong>
+          </p>
+          <table class="w-full text-left border-collapse text-xs sm:text-sm border border-slate-200 rounded-lg overflow-hidden">
+            <thead>
+              <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
+                <th class="py-2 px-3 font-heading">ระดับคะแนน</th>
+                <th class="py-2 px-3 font-heading">ช่วงค่าเฉลี่ย (<span class="xbar">x</span>)</th>
+                <th class="py-2 px-3 font-heading">การแปลผลระดับ</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 text-slate-700">
+              <tr class="bg-emerald-50/50">
+                <td class="py-1.5 px-3 font-semibold">ระดับ 5</td>
+                <td class="py-1.5 px-3 font-medium">4.21 – 5.00</td>
+                <td class="py-1.5 px-3"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-semibold text-xs">มากที่สุด</span></td>
+              </tr>
+              <tr>
+                <td class="py-1.5 px-3 font-semibold">ระดับ 4</td>
+                <td class="py-1.5 px-3 font-medium">3.41 – 4.20</td>
+                <td class="py-1.5 px-3"><span class="bg-teal-100 text-teal-800 px-2 py-0.5 rounded font-semibold text-xs">มาก</span></td>
+              </tr>
+              <tr>
+                <td class="py-1.5 px-3 font-semibold">ระดับ 3</td>
+                <td class="py-1.5 px-3 font-medium">2.61 – 3.40</td>
+                <td class="py-1.5 px-3"><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold text-xs">ปานกลาง</span></td>
+              </tr>
+              <tr>
+                <td class="py-1.5 px-3 font-semibold">ระดับ 2</td>
+                <td class="py-1.5 px-3 font-medium">1.81 – 2.60</td>
+                <td class="py-1.5 px-3"><span class="bg-orange-100 text-orange-800 px-2 py-0.5 rounded font-semibold text-xs">น้อย</span></td>
+              </tr>
+              <tr>
+                <td class="py-1.5 px-3 font-semibold">ระดับ 1</td>
+                <td class="py-1.5 px-3 font-medium">1.00 – 1.80</td>
+                <td class="py-1.5 px-3"><span class="bg-rose-100 text-rose-800 px-2 py-0.5 rounded font-semibold text-xs">น้อยที่สุด</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Statistical Test Mapping -->
+        <div class="lg:col-span-7 bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+          <h3 class="font-heading font-bold text-base text-slate-800 mb-3 flex items-center gap-2">
+            <span>🧭</span> แผนผังการเลือกใช้สถิติให้ตรงกับชนิดของตัวแปร
+          </h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 border-y border-slate-200">
+                  <th class="py-2 px-3 font-heading">สถิติที่ต้องการวิเคราะห์</th>
+                  <th class="py-2 px-3 font-heading">ตัวแปรต้น (IV)</th>
+                  <th class="py-2 px-3 font-heading">ตัวแปรตาม (DV 5 ระดับ)</th>
+                  <th class="py-2 px-3 font-heading">ตัวอย่างโจทย์วิจัย</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 text-slate-600">
+                <tr>
+                  <td class="py-2 px-3 font-semibold text-indigo-700">1. ความถี่ & ร้อยละ + ค่าเฉลี่ย 5 ระดับ</td>
+                  <td class="py-2 px-3"><span class="bg-sky-100 text-sky-800 px-2 py-0.5 rounded text-xs">ตัวแปรต้น 1 ตัว</span></td>
+                  <td class="py-2 px-3"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-xs">แจกแจงระดับ 1-5, <span class="xbar">x</span>, S.D.</span></td>
+                  <td class="py-2 px-3">ผู้ตอบแต่ละเพศมีกี่คน และมีความพึงพอใจแต่ละด้านอยู่ในระดับใด?</td>
+                </tr>
+                <tr>
+                  <td class="py-2 px-3 font-semibold text-indigo-700">2. One-Sample t-test</td>
+                  <td class="py-2 px-3 text-slate-400">- ไม่แบ่งกลุ่ม</td>
+                  <td class="py-2 px-3"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-xs">ตัวแปรตาม 1 ตัว (1-5)</span></td>
+                  <td class="py-2 px-3">ค่าเฉลี่ยความพึงพอใจแตกต่างจากเกณฑ์ระดับมาก (3.50 คะแนน) หรือไม่?</td>
+                </tr>
+                <tr>
+                  <td class="py-2 px-3 font-semibold text-indigo-700">3. Independent t-test</td>
+                  <td class="py-2 px-3"><span class="bg-sky-100 text-sky-800 px-2 py-0.5 rounded text-xs">ตัวแปรต้น 2 กลุ่ม</span></td>
+                  <td class="py-2 px-3"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-xs">ตัวแปรตาม 1 ตัว (1-5)</span></td>
+                  <td class="py-2 px-3">นักศึกษาชายและหญิง มีระดับความพึงพอใจแตกต่างกันหรือไม่?</td>
+                </tr>
+                <tr>
+                  <td class="py-2 px-3 font-semibold text-indigo-700">4. One-Way ANOVA</td>
+                  <td class="py-2 px-3"><span class="bg-sky-100 text-sky-800 px-2 py-0.5 rounded text-xs">ตัวแปรต้น 3 กลุ่มขึ้นไป</span></td>
+                  <td class="py-2 px-3"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-xs">ตัวแปรตาม 1 ตัว (1-5)</span></td>
+                  <td class="py-2 px-3">นักศึกษาที่พักหอใน หอนอก และบ้าน มีความพึงพอใจแตกต่างกันหรือไม่?</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: DATA COLLECTION ==================== -->
+    <section id="tab-collect" class="tab-panel hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left Column: Live Questionnaire Survey Form (5-Level Rating) -->
+        <div class="lg:col-span-5">
+          <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 sticky top-28">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <div>
+                <span class="text-xs font-bold text-brand-600 uppercase">แบบสอบถามจำลองการเก็บข้อมูลจริง</span>
+                <h3 class="font-heading font-bold text-lg text-slate-800">📝 แบบสอบถามชุดที่ <span id="nextRespondentNum">1</span></h3>
+              </div>
+              <span class="text-2xl">📋</span>
+            </div>
+
+            <form id="surveyForm" class="space-y-4">
+              <!-- Dynamic IV Inputs -->
+              <div>
+                <div class="text-xs font-heading font-semibold text-sky-800 bg-sky-50 px-2.5 py-1.5 rounded mb-2.5 border border-sky-200">
+                  ส่วนที่ 1: ข้อมูลทั่วไปของผู้ตอบ / ตัวแปรต้น (IV)
+                </div>
+                <div id="formIvFields" class="space-y-3"></div>
+              </div>
+
+              <!-- Dynamic DV Inputs (5-Level Likert Buttons) -->
+              <div>
+                <div class="text-xs font-heading font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-1.5 rounded mb-2 border border-emerald-200 flex items-center justify-between">
+                  <span>ส่วนที่ 2: ระดับความคิดเห็น / ตัวแปรตาม (5 ระดับ)</span>
+                  <span class="text-[11px] font-normal text-emerald-700">1=น้อยที่สุด ... 5=มากที่สุด</span>
+                </div>
+                <div id="formDvFields" class="space-y-3"></div>
+              </div>
+
+              <div class="pt-2 flex flex-col gap-2">
+                <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-heading font-semibold py-2.5 px-4 rounded-xl shadow transition flex items-center justify-center gap-2">
+                  <span>➕</span> บันทึกแบบสอบถามลงตารางข้อมูล
+                </button>
+                <div class="grid grid-cols-2 gap-2">
+                  <button type="button" id="btnSimOne" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-heading font-medium py-2 px-3 rounded-lg transition">
+                    🎲 สุ่มเพิ่ม 1 คน
+                  </button>
+                  <button type="button" id="btnSimTen" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-heading font-medium py-2 px-3 rounded-lg border border-indigo-200 transition">
+                    ⚡ สุ่มเพิ่ม 10 คน
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Right Column: Raw Data Table (Data View like SPSS) -->
+        <div class="lg:col-span-7">
+          <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+            <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
+              <div>
+                <h3 class="font-heading font-bold text-lg text-slate-800 flex items-center gap-2">
+                  <span>🗂️</span> ตารางลงรหัสข้อมูล (Data View: ระดับ 1 ถึง 5)
+                  <span class="text-xs font-normal bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full">รวม <strong id="totalRowsLabel">0</strong> คน (N)</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">แต่ละแถวแทนผู้ตอบ 1 คน สามารถคลิกเปลี่ยนระดับคะแนน (1 = น้อยที่สุด ถึง 5 = มากที่สุด) ในตารางได้ทันที</p>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <label class="text-xs bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 font-medium px-3 py-1.5 rounded-lg transition cursor-pointer" title="นำเข้าไฟล์ CSV ที่เก็บมาจาก Google Forms หรือ Excel">
+                  📂 นำเข้า CSV
+                  <input type="file" id="inputImportCsv" accept=".csv" class="hidden" />
+                </label>
+                <button id="btnExportCsv" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-medium px-3 py-1.5 rounded-lg transition">
+                  📥 ดาวน์โหลด CSV
+                </button>
+                <button id="btnClearData" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-medium px-3 py-1.5 rounded-lg transition">
+                  🗑️ ล้างข้อมูล
+                </button>
+                <button id="btnGoToAnalyze" class="text-xs bg-brand-600 hover:bg-brand-700 text-white font-heading font-medium px-3.5 py-1.5 rounded-lg shadow-sm transition">
+                  วิเคราะห์สถิติ →
+                </button>
+              </div>
+            </div>
+
+            <!-- Table Wrapper -->
+            <div class="overflow-x-auto mt-4 max-h-[580px] overflow-y-auto border border-slate-200 rounded-xl">
+              <table class="w-full text-left border-collapse text-xs sm:text-sm" id="rawDataTable">
+                <thead id="rawDataThead" class="bg-slate-100 text-slate-700 sticky top-0 z-10 shadow-sm"></thead>
+                <tbody id="rawDataTbody" class="divide-y divide-slate-200"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: STATISTICAL ANALYSIS & TABLE READING ==================== -->
+    <section id="tab-analyze" class="tab-panel hidden space-y-6">
+      <!-- Top Bar: Analysis Method Selector & Reading Mode Toggle -->
+      <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-2">
+          <button data-stat="freq" class="stat-subtab active-stat-subtab font-heading text-xs sm:text-sm px-4 py-2.5 rounded-xl font-medium transition flex items-center gap-2">
+            <span>📊</span> 1. ความถี่ & ร้อยละ
+          </button>
+          <button data-stat="onesample" class="stat-subtab font-heading text-xs sm:text-sm px-4 py-2.5 rounded-xl font-medium transition flex items-center gap-2">
+            <span>🎯</span> 2. One-Sample t-test
+          </button>
+          <button data-stat="indep" class="stat-subtab font-heading text-xs sm:text-sm px-4 py-2.5 rounded-xl font-medium transition flex items-center gap-2">
+            <span>⚖️</span> 3. Independent t-test
+          </button>
+          <button data-stat="anova" class="stat-subtab font-heading text-xs sm:text-sm px-4 py-2.5 rounded-xl font-medium transition flex items-center gap-2">
+            <span>📈</span> 4. One-Way ANOVA
+          </button>
+        </div>
+
+        <!-- Table Format & Guide Switch -->
+        <div class="flex items-center gap-3">
+          <label class="inline-flex items-center gap-2 cursor-pointer text-xs sm:text-sm font-medium text-slate-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl">
+            <input type="checkbox" id="toggleReadingGuide" checked class="rounded text-brand-600 focus:ring-brand-500 w-4 h-4" />
+            <span>💡 แสดงคำอธิบายวิธีอ่านตารางและแปลผล</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- -------------------- SUB-PANEL 3.1: FREQUENCY & PERCENTAGE -------------------- -->
+      <div id="stat-freq" class="stat-panel space-y-6">
+        <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200">
+          <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <span class="text-xs font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded">สถิติพรรณนา (Descriptive Statistics)</span>
+              <h3 class="font-heading text-lg sm:text-xl font-bold text-slate-800 mt-1">การแจกแจงความถี่ ร้อยละ ค่าเฉลี่ย (<span class="xbar">x</span>) และส่วนเบี่ยงเบนมาตรฐาน (S.D.)</h3>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <label for="freqVarSelect" class="text-xs sm:text-sm font-medium text-slate-700">เลือกตัวแปรต้น (IV):</label>
+              <select id="freqVarSelect" class="border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"></select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-5">
+            <!-- Frequency Table (SPSS & APA Style) -->
+            <div class="lg:col-span-7 space-y-4">
+              <div class="flex items-center justify-between">
+                <h4 class="font-heading font-semibold text-sm sm:text-base text-slate-800" id="freqTableTitle">ตารางที่ 1 จำนวนและร้อยละของกลุ่มตัวอย่าง</h4>
+                <span class="text-xs text-slate-500">ส่วนที่ 1: ข้อมูลทั่วไป (ตัวแปรต้น)</span>
+              </div>
+
+              <div class="overflow-x-auto border border-slate-300 rounded-lg">
+                <table class="w-full text-left border-collapse text-xs sm:text-sm academic-table">
+                  <thead>
+                    <tr class="bg-slate-100 border-b-2 border-slate-800 text-slate-800">
+                      <th class="py-2.5 px-4 font-heading">หมวดหมู่ / ข้อมูลทั่วไป</th>
+                      <th class="py-2.5 px-4 font-heading text-right" title="จำนวนคนในแต่ละกลุ่ม">ความถี่ (Frequency: <i>f</i>)</th>
+                      <th class="py-2.5 px-4 font-heading text-right" title="(ความถี่ ÷ จำนวนทั้งหมด) × 100">ร้อยละ (Percent: %)</th>
+                      <th class="py-2.5 px-4 text-right" title="ร้อยละสะสมเรียงตามลำดับ">ร้อยละสะสม (Cumulative %)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="freqTableBody" class="divide-y divide-slate-200"></tbody>
+                  <tfoot id="freqTableFoot" class="bg-slate-50 border-t-2 border-slate-800 font-bold text-slate-900"></tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- Visual Bar Chart & Reading Guide -->
+            <div class="lg:col-span-5 space-y-4">
+              <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                <h4 class="font-heading font-semibold text-sm text-slate-700 mb-3">แผนภูมิแท่งแสดงจำนวนและร้อยละของตัวแปรต้น</h4>
+                <div id="freqBarChart" class="space-y-3"></div>
+              </div>
+
+              <div class="reading-guide-box bg-amber-50/90 border border-amber-200 rounded-xl p-4 space-y-2.5">
+                <h4 class="font-heading font-bold text-sm text-amber-900 flex items-center gap-1.5">
+                  <span>📖</span> คู่มือการอ่านตารางความถี่และร้อยละ
+                </h4>
+                <ul class="text-xs sm:text-sm text-slate-700 space-y-1.5 list-disc list-inside">
+                  <li><strong>ความถี่ (<i>f</i>):</strong> คือจำนวนคนในแต่ละกลุ่ม เมื่อรวมทุกกลุ่มแล้วต้องเท่ากับจำนวนกลุ่มตัวอย่างทั้งหมด (N)</li>
+                  <li><strong>ร้อยละ (%):</strong> คำนวณจาก <strong>(ความถี่ <i>f</i> ÷ จำนวนทั้งหมด N) × 100</strong> โดยมีผลรวมเท่ากับ 100.00%</li>
+                  <li><strong>การเขียนบรรยายใต้ตาราง:</strong> นิยมเรียงลำดับจากกลุ่มที่มีจำนวนและร้อยละ<strong>มากที่สุด</strong>ไปหา<strong>น้อยที่สุด</strong></li>
+                </ul>
+                <div class="bg-white p-3 rounded-lg border border-amber-300 mt-2">
+                  <span class="text-xs font-bold text-indigo-700 uppercase">ตัวอย่างการเขียนอภิปรายผลใต้ตาราง (APA):</span>
+                  <p id="freqInterpretationText" class="text-xs sm:text-sm text-slate-800 mt-1 leading-relaxed"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5-Level DV Distribution Table (Frequency, %, Mean, SD, Meaning) -->
+          <div class="mt-6 pt-5 border-t border-slate-200">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div>
+                <h4 class="font-heading font-bold text-sm sm:text-base text-slate-800">
+                  ตารางที่ 2 จำนวน ร้อยละ ค่าเฉลี่ย (<span class="xbar">x</span>) ส่วนเบี่ยงเบนมาตรฐาน (S.D.) และระดับความคิดเห็นของตัวแปรตาม (5 ระดับ)
+                </h4>
+                <p class="text-xs text-slate-500">ตารางมาตรฐานบทที่ 4 สำหรับแบบสอบถามมาตรวัดประเมินค่า 5 ระดับ (5 = มากที่สุด, 4 = มาก, 3 = ปานกลาง, 2 = น้อย, 1 = น้อยที่สุด)</p>
+              </div>
+            </div>
+            <div class="overflow-x-auto border border-slate-300 rounded-lg">
+              <table class="w-full text-left border-collapse text-xs sm:text-sm academic-table">
+                <thead>
+                  <tr class="bg-slate-100 border-b border-slate-300 text-slate-800">
+                    <th rowspan="2" class="py-2.5 px-3 font-heading border-r border-slate-300">รายการตัวแปรตาม (DV)</th>
+                    <th colspan="5" class="py-1.5 px-3 font-heading text-center border-r border-slate-300 bg-emerald-50">ระดับความคิดเห็น: จำนวนคน (ร้อยละ %)</th>
+                    <th rowspan="2" class="py-2.5 px-3 font-heading text-right">ค่าเฉลี่ย (<span class="xbar">x</span>)</th>
+                    <th rowspan="2" class="py-2.5 px-3 font-heading text-right">S.D.</th>
+                    <th rowspan="2" class="py-2.5 px-3 font-heading text-center">แปลผลระดับ</th>
+                  </tr>
+                  <tr class="bg-slate-100 border-b-2 border-slate-800 text-slate-800 text-xs">
+                    <th class="py-1.5 px-2 text-center bg-emerald-50/60">มากที่สุด (5)</th>
+                    <th class="py-1.5 px-2 text-center bg-emerald-50/60">มาก (4)</th>
+                    <th class="py-1.5 px-2 text-center bg-emerald-50/60">ปานกลาง (3)</th>
+                    <th class="py-1.5 px-2 text-center bg-emerald-50/60">น้อย (2)</th>
+                    <th class="py-1.5 px-2 text-center border-r border-slate-300 bg-emerald-50/60">น้อยที่สุด (1)</th>
+                  </tr>
+                </thead>
+                <tbody id="descDvTableBody" class="divide-y divide-slate-200"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- -------------------- SUB-PANEL 3.2: ONE-SAMPLE T-TEST -------------------- -->
+      <div id="stat-onesample" class="stat-panel hidden space-y-6">
+        <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200">
+          <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <span class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded">สถิติอนุมาน (Inferential Statistics)</span>
+              <h3 class="font-heading text-lg sm:text-xl font-bold text-slate-800 mt-1">การทดสอบทีแบบกลุ่มเดียว (One-Sample t-test)</h3>
+              <p class="text-xs text-slate-500">ใช้เปรียบเทียบค่าเฉลี่ย (<span class="xbar">x</span>) ของตัวแปรตาม 5 ระดับ กับ "ค่าเกณฑ์มาตรฐาน" หรือ "ค่าเป้าหมาย" (μ₀ เช่น เกณฑ์ 3.50 คะแนน)</p>
+            </div>
+            <!-- Controls -->
+            <div class="flex flex-wrap items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <div>
+                <label class="block text-[11px] font-medium text-slate-600">ตัวแปรตามที่ต้องการทดสอบ (DV):</label>
+                <select id="oneSampleDvSelect" class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"></select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-slate-600">ค่าเกณฑ์เปรียบเทียบ (Test Value: μ₀):</label>
+                <input type="number" step="0.1" min="1" max="5" id="oneSampleTestVal" value="3.5" class="w-24 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-slate-600">ระดับนัยสำคัญ (α):</label>
+                <select id="oneSampleAlpha" class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm bg-white">
+                  <option value="0.05">0.05 (เชื่อมั่น 95%)</option>
+                  <option value="0.01">0.01 (เชื่อมั่น 99%)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hypotheses Box -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+              <span class="text-xs font-bold text-slate-500 uppercase">สมมติฐานว่าง (Null Hypothesis: H₀)</span>
+              <p id="oneSampleH0" class="text-xs sm:text-sm font-medium text-slate-800 mt-1"></p>
+            </div>
+            <div class="bg-indigo-50/60 border border-indigo-200 rounded-xl p-3.5">
+              <span class="text-xs font-bold text-indigo-700 uppercase">สมมติฐานทางเลือก (Alternative Hypothesis: H₁)</span>
+              <p id="oneSampleH1" class="text-xs sm:text-sm font-medium text-indigo-950 mt-1"></p>
+            </div>
+          </div>
+
+          <!-- Tables: SPSS Output Style & APA Report Table -->
+          <div class="space-y-5 mt-5">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="font-heading font-semibold text-sm sm:text-base text-slate-800">ตารางที่ 1 ค่าสถิติพื้นฐาน (One-Sample Statistics)</h4>
+                <span class="text-xs text-slate-500">คะแนนเต็ม 5.00 คะแนน</span>
+              </div>
+              <div class="overflow-x-auto border border-slate-300 rounded-lg">
+                <table class="w-full text-left border-collapse text-xs sm:text-sm academic-table">
+                  <thead>
+                    <tr class="bg-slate-100 border-b-2 border-slate-800 text-slate-800">
+                      <th class="py-2.5 px-4 font-heading">ตัวแปรตาม (5 ระดับ)</th>
+                      <th class="py-2.5 px-4 font-heading text-right">จำนวน (<i>n</i>)</th>
+                      <th class="py-2.5 px-4 font-heading text-right">ค่าเฉลี่ย (Mean / <span class="xbar">x</span>)</th>
+                      <th class="py-2.5 px-4 font-heading text-right">ส่วนเบี่ยงเบนมาตรฐาน (S.D.)</th>
+                      <th class="py-2.5 px-4 font-heading text-right">ความคลาดเคลื่อนมาตรฐาน (Std. Error Mean)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="oneSampleStatBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="font-heading font-semibold text-sm sm:text-base text-slate-800">ตารางที่ 2 ผลการทดสอบทีแบบกลุ่มเดียว (One-Sample Test)</h4>
+                <span id="oneSampleTestValBadge" class="text-xs font-semibold bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded">Test Value = 3.50</span>
+              </div>
+              <div class="overflow-x-auto border border-slate-300 rounded-lg">
+                <table class="w-full text-left border-collapse text-xs sm:text-sm academic-table">
+                  <thead>
+                    <tr class="bg-slate-100 border-b-2 border-slate-800 text-slate-800">
+                      <th class="py-2.5 px-4 font-heading">ตัวแปรตาม</th>
+                      <th class="py-2.5 px-4 font-heading text-right">ค่าสถิติ <i>t</i></th>
+                      <th class="py-2.5 px-4 font-heading text-right">องศาอิสระ (<i>df</i>)</th>
+                      <th class="py-2.5 px-4 font-heading text-right">Sig. (2-tailed) / <i>p</i>-value</th>
+                      <th class="py-2.5 px-4 font-heading text-right">ผลต่างค่าเฉลี่ย (Mean Difference)</th>
+                      <th class="py-2.5 px-4 font-heading text-right">95% CI (Lower – Upper)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="oneSampleTestBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reading Guide & Step-by-Step Interpretation -->
+          <div class="reading-guide-box grid grid-cols-1 lg:grid-cols-12 gap-5 mt-6 pt-5 border-t border-slate-100">
+            <div class="lg:col-span-6 bg-amber-50/90 border border-amber-200 rounded-xl p-4 space-y-2.5">
+              <h4 class="font-heading font-bold text-sm text-amber-900 flex items-center gap-1.5">
+                <span>🔍</span> วิธีอ่านค่าในตาราง One-Sample t-test ทีละช่อง
+              </h4>
+              <div class="text-xs sm:text-sm text-slate-700 space-y-2">
+                <p><strong>1. ผลต่างค่าเฉลี่ย (Mean Difference):</strong> คำนวณจาก <strong>ค่าเฉลี่ย (<span class="xbar">x</span>) − ค่าเกณฑ์ (μ₀)</strong> ถ้าได้ค่าบวก แปลว่าค่าเฉลี่ยสูงกว่าเกณฑ์ ถ้าติดลบ แปลว่าต่ำกว่าเกณฑ์</p>
+                <div class="flex flex-wrap items-center gap-2 bg-white p-2.5 rounded-lg border border-amber-200">
+                  <strong>2. สูตรคำนวณค่า <i>t</i>:</strong>
+                  <span class="math-formula">
+                    <i>t</i> =
+                    <span class="math-frac">
+                      <span class="num"><span class="xbar">x</span> − μ₀</span>
+                      <span class="den">S.D. ÷ √<i>n</i></span>
+                    </span>
+                  </span>
+                  <span>โดยมีองศาอิสระ <strong><i>df</i> = <i>n</i> − 1</strong></span>
+                </div>
+                <p><strong>3. ค่า Sig. (2-tailed) หรือ <i>p</i>-value:</strong> คือจุดตัดสินใจสำคัญที่สุด!
+                  <br>• ถ้า <strong>Sig. น้อยกว่า 0.05</strong> (เช่น .000, .012) → <strong>ปฏิเสธ H₀</strong> (ค่าเฉลี่ยแตกต่างจากเกณฑ์อย่างมีนัยสำคัญทางสถิติ)
+                  <br>• ถ้า <strong>Sig. มากกว่าหรือเท่ากับ 0.05</strong> (เช่น .120, .450) → <strong>ยอมรับ H₀</strong> (ค่าเฉลี่ยไม่แตกต่างจากเกณฑ์)
+                </p>
+              </div>
+            </div>
+
+            <div class="lg:col-span-6 bg-indigo-50/70 border border-indigo-200 rounded-xl p-4 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-indigo-800 uppercase">สรุปผลการตัดสินใจและคำแปลผลรายงานวิจัย</span>
+                  <span id="oneSampleDecisionBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full"></span>
+                </div>
+                <p id="oneSampleSummaryText" class="text-xs sm:text-sm text-slate-800 mt-3 leading-relaxed bg-white p-3.5 rounded-lg border border-indigo-200"></p>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-2">* หมายเหตุ: เครื่องหมาย * ท้ายค่าสถิติ หมายถึง มีนัยสำคัญทางสถิติที่ระดับ .05</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- -------------------- SUB-PANEL 3.3: INDEPENDENT SAMPLES T-TEST -------------------- -->
+      <div id="stat-indep" class="stat-panel hidden space-y-6">
+        <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200">
+          <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <span class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded">สถิติอนุมานเปรียบเทียบ 2 กลุ่มอิสระ</span>
+              <h3 class="font-heading text-lg sm:text-xl font-bold text-slate-800 mt-1">การทดสอบทีแบบสองกลุ่มอิสระ (Independent Samples t-test)</h3>
+              <p class="text-xs text-slate-500">ใช้เปรียบเทียบค่าเฉลี่ย (<span class="xbar">x</span>) ของตัวแปรตาม (5 ระดับ) ระหว่างกลุ่มตัวอย่าง 2 กลุ่มที่เป็นอิสระต่อกัน</p>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex flex-wrap items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <div>
+                <label class="block text-[11px] font-medium text-slate-600">ตัวแปรต้นแบ่งกลุ่ม (IV):</label>
+                <select id="indepIvSelect" class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm bg-white"></select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-slate-600">กลุ่มที่ 1 vs กลุ่มที่ 2:</label>
+                <div class="flex items-center gap-1">
+                  <select id="indepGroup1Select" class="border border-slate-300 rounded-lg px-2 py-1.5 text-xs sm:text-sm bg-white"></select>
+                  <span class="text-xs text-slate-400">กับ</span>
+                  <select id="indepGroup2Select" class="border border-slate-300 rounded-lg px-2 py-1.5 text-xs sm:text-sm bg-white"></select>
+                </div>
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-slate-600">ตัวแปรตาม 5 ระดับ (DV):</label>
+                <select id="indepDvSelect" class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm bg-white"></select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hypotheses Box -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+              <span class="text-xs font-bold text-slate-500 uppercase">สมมติฐานว่าง (H₀)</span>
+              <p id="indepH0" class="text-xs sm:text-sm font-medium text-slate-800 mt-1"></p>
+            </div>
+            <div class="bg-indigo-50/60 border border-indigo-200 rounded-xl p-3.5">
+              <span class="text-xs font-bold text-indigo-700 uppercase">สมมติฐานทางเลือก (H₁)</span>
+              <p id="indepH1" class="text-xs sm:text-sm font-medium text-indigo-950 mt-1"></p>
+            </div>
+          </div>
+
+          <!-- Table 1: Group Statistics -->
+          <div class="mt-5">
+            <h4 class="font-heading font-semibold text-sm sm:text-base text-slate-800 mb-2">ตารางที่ 1 ค่าสถิติพื้นฐานแยกตามกลุ่ม (Group Statistics)</h4>
+            <div class="overflow-x-auto border border-slate-300 rounded-lg">
+              <table class="w-full text-left border-collapse text-xs sm:text-sm academic-table">
+                <thead>
+                  <tr class="bg-slate-100 border-b-2 border-slate-800 text-slate-800">
+                    <th class="py-2.5 px-4 font-heading">ตัวแปรตาม (5 ระดับ)</th>
+                    <th class="py-2.5 px-4 font-heading">กลุ่มตัวอย่าง (ตัวแปรต้น)</th>
+                    <th class="py-2.5 px-4 font-heading text-right">จำนวน (<i>n</i>)</th>
+                    <th class="py-2.5 px-4 font-heading text-right">ค่าเฉลี่ย (<span class="xbar">x</span> / Mean)</th>
+                    <th class="py-2.5 px-4 font-heading text-right">ส่วนเบี่ยงเบนมาตรฐาน (S.D.)</th>
+                    <th class="py-2.5 px-4 font-heading text-center">แปลผลระดับ</th>
+                  </tr>
+                </thead>
+                <tbody id="indepGroupStatBody" class="divide-y divide-slate-200"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Table 2: Full SPSS-Style Independent Samples Test (with Levene's Test & 2 Rows) -->
+          <div class="mt-5">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <h4 class="font-heading font-semibold text-sm sm:text-base text-slate-800">
+                ตารางที่ 2 ผลการทดสอบ Independent Samples Test (ตารางมาตรฐาน SPSS 2 บรรทัด)
+              </h4>
+              <span class="text-xs bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full font-medium">
+                ⭐ ไฮไลต์สีเหลืองคือบรรทัดที่นักศึกษาต้องเลือกอ่านตามผล Levene's Test
+              </span>
+            </div>
+            <div class="overflow-x-auto border border-slate-300 rounded-lg">
+              <table class="w-full text-left border-collapse text-xs sm:text-sm academic-table">
+                <thead>
+                  <tr class="bg-slate-100 border-b border-slate-300 text-slate-800">
+                    <th rowspan="2" class="py-2 px-3 font-heading border-r border-slate-300">เงื่อนไขความแปรปรวน (Assumptions)</th>
+                    <th colspan="2" class="py-1.5 px-3 font-heading text-center border-r border-slate-300 bg-sky-50">Levene's Test (ทดสอบความแปรปรวนเท่ากัน)</th>
+                    <th colspan="5" class="py-1.5 px-3 font-heading text-center bg-indigo-50">t-test for Equality of Means (ทดสอบค่าเฉลี่ยเท่ากัน)</th>
+                  </tr>
+                  <tr class="bg-slate-100 border-b-2 border-slate-800 text-slate-800">
+                    <th class="py-2 px-3 font-heading text-right bg-sky-50/60"><i>F</i></th>
+                    <th class="py-2 px-3 font-heading text-right border-r border-slate-300 bg-sky-50/60">Sig. (Levene)</th>
+                    <th class="py-2 px-3 font-heading text-right"><i>t</i></th>
+                    <th class="py-2 px-3 font-heading text-right"><i>df</i></th>
+                    <th class="py-2 px-3 font-heading text-right">Sig. (2-tailed)</th>
+                    <th class="py-2 px-3 font-heading text-right">ผลต่าง (<span class="xbar">x</span>₁ − <span class="xbar">x</span>₂)</th>
+                    <th class="py-2 px-3 font-heading text-right">Std. Error Diff.</th>
+                  </tr>
+                </thead>
+                <tbody id="indepSpssTestBody" class="divide-y divide-slate-200"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Table 3: Clean APA Academic Paper Table -->
+          <div class="mt-5">
+            <h4 class="font-heading font-semibold text-sm sm:text-base text-slate-800 mb-2">ตารางที่ 3 รูปแบบตารางสรุปสำหรับใส่ในบทที่ 4 ของรายงานวิจัย (APA Style)</h4>
+            <div class="overflow-x-auto border border-slate-300 rounded-lg">
+              <table class="w-full text-left border-collapse text-xs sm:text-sm academic-table">
+                <thead>
+                  <tr class="bg-slate-100 border-b-2 border-slate-800 text-slate-800">
+                    <th class="py-2.5 px-4 font-heading">กลุ่มตัวอย่าง</th>
+                    <th class="py-2.5 px-4 font-heading text-right"><i>n</i></th>
+                    <th class="py-2.5 px-4 font-heading text-right"><span class="xbar">x</span> (Mean)</th>
+                    <th class="py-2.5 px-4 font-heading text-right">S.D.</th>
+                    <th class="py-2.5 px-4 font-heading text-right"><i>t</i></th>
+                    <th class="py-2.5 px-4 font-heading text-right"><i>df</i></th>
+                    <th class="py-2.5 px-4 font-heading text-right"><i>p</i> (Sig.)</th>
+                  </tr>
+                </thead>
+                <tbody id="indepApaTableBody" class="divide-y divide-slate-200"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Reading Guide for Independent t-test -->
+          <div class="reading-guide-box grid grid-cols-1 lg:grid-cols-12 gap-5 mt-6 pt-5 border-t border-slate-100">
+            <div class="lg:col-span-6 bg-amber-50/90 border border-amber-200 rounded-xl p-4 space-y-2">
+              <h4 class="font-heading font-bold text-sm text-amber-900 flex items-center gap-1.5">
+                <span>🧭</span> เทคนิคการอ่านตาราง Independent t-test 2 ขั้นตอน (สำคัญมาก!)
+              </h4>
+              <div class="text-xs sm:text-sm text-slate-700 space-y-2">
+                <p><strong>ขั้นตอนที่ 1: ดูช่อง Levene's Test (F และ Sig. ช่องสีฟ้า) ก่อนเสมอ</strong> เพื่อตรวจว่าความแปรปรวนของ 2 กลุ่มเท่ากันหรือไม่
+                  <br>• ถ้า <strong>Sig. (Levene) มากกว่า 0.05</strong> → ความแปรปรวนเท่ากัน ให้เลือกอ่าน<strong>บรรทัดบน (Equal variances assumed)</strong>
+                  <br>• ถ้า <strong>Sig. (Levene) น้อยกว่าหรือเท่ากับ 0.05</strong> → ความแปรปรวนไม่เท่ากัน ให้เลือกอ่าน<strong>บรรทัดล่าง (Equal variances not assumed)</strong>
+                </p>
+                <p><strong>ขั้นตอนที่ 2: ดูค่า <i>t</i>, <i>df</i> และ Sig. (2-tailed) ในบรรทัดที่เลือก</strong>
+                  <br>• ถ้า <strong>Sig. (2-tailed) น้อยกว่า 0.05</strong> → ค่าเฉลี่ยของทั้ง 2 กลุ่ม<strong>แตกต่างกันอย่างมีนัยสำคัญทางสถิติ</strong>
+                  <br>• ถ้า <strong>Sig. (2-tailed) มากกว่าหรือเท่ากับ 0.05</strong> → ค่าเฉลี่ยของทั้ง 2 กลุ่ม<strong>ไม่แตกต่างกัน</strong>
+                </p>
+              </div>
+            </div>
+
+            <div class="lg:col-span-6 bg-indigo-50/70 border border-indigo-200 rounded-xl p-4 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-indigo-800 uppercase">สรุปขั้นตอนการอ่านตารางและการแปลผล</span>
+                  <span id="indepDecisionBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full"></span>
+                </div>
+                <div id="indepStepWalkthrough" class="text-xs text-indigo-950 mt-2 space-y-1 bg-indigo-100/70 p-2.5 rounded-lg"></div>
+                <p id="indepSummaryText" class="text-xs sm:text-sm text-slate-800 mt-3 leading-relaxed bg-white p-3.5 rounded-lg border border-indigo-200"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- -------------------- SUB-PANEL 3.4: ONE-WAY ANOVA -------------------- -->
+      <div id="stat-anova" class="stat-panel hidden space-y-6">
+        <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200">
+          <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <span class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded">สถิติอนุมานเปรียบเทียบตั้งแต่ 3 กลุ่มขึ้นไป</span>
+              <h3 class="font-heading text-lg sm:text-xl font-bold text-slate-800 mt-1">การวิเคราะห์ความแปรปรวนทางเดียว (One-Way ANOVA / F-test)</h3>
+              <p class="text-xs text-slate-500">ใช้เปรียบเทียบค่าเฉลี่ย (<span class="xbar">x</span>) ของตัวแปรตาม (5 ระดับ) ระหว่างกลุ่มตัวอย่างตั้งแต่ 3 กลุ่มขึ้นไป พร้อมการเปรียบเทียบรายคู่ (Post-hoc)</p>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex flex-wrap items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <div>
+                <label class="block text-[11px] font-medium text-slate-600">ตัวแปรต้นแบ่งกลุ่ม (IV - 3 กลุ่มขึ้นไป):</label>
+                <select id="anovaIvSelect" class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm bg-white"></select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-slate-600">ตัวแปรตาม 5 ระดับ (DV):</label>
+                <select id="anovaDvSelect" class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm bg-white"></select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hypotheses Box -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+              <span class="text-xs font-bold text-slate-500 uppercase">สมมติฐานว่าง (H₀)</span>
+              <p id="anovaH0" class="text-xs sm:text-sm font-medium text-slate-800 mt-1"></p>
+            </div>
+            <div class="bg-indigo-50/60 border border-indigo-200 rounded-xl p-3.5">
+              <span class="text-xs font-bold text-indigo-700 uppercase">สมมติฐานทางเลือก (H₁)</span>
+              <p id="anovaH1" class="text-xs sm:text-sm font-medium text-indigo-950 mt-1"></p>
+            </div>
+          </div>
+
+          <!-- Table 1: Descriptives by Group -->
+          <div class="mt-5">
+            <h4 class="font-heading font-semibold text-sm sm:text-base text-slate-800 mb-2">ตารางที่ 1 ค่าสถิติพื้นฐานแยกตามกลุ่ม (Descriptives)</h4>
+            <div class="overflow-x-auto border border-slate-300 rounded-lg">
+              <table class="w-full text-left border-collapse text-xs sm:text-sm academic-table">
+                <thead>
+                  <tr class="bg-slate-100 border-b-2 border-slate-800 text-slate-800">
+                    <th class="py-2.5 px-4 font-heading">กลุ่มตัวอย่าง</th>
+                    <th class="py-2.5 px-4 font-heading text-right">จำนวน (<i>n</i>)</th>
+                    <th class="py-2.5 px-4 font-heading text-right">ค่าเฉลี่ย (<span class="xbar">x</span> / Mean)</th>
+                    <th class="py-2.5 px-4 font-heading text-right">ส่วนเบี่ยงเบนมาตรฐาน (S.D.)</th>
+                    <th class="py-2.5 px-4 font-heading text-center">แปลผลระดับ</th>
+                    <th class="py-2.5 px-4 font-heading text-right">ต่ำสุด (Min)</th>
+                    <th class="py-2.5 px-4 font-heading text-right">สูงสุด (Max)</th>
+                  </tr>
+                </thead>
+                <tbody id="anovaDescBody" class="divide-y divide-slate-200"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Table 2: ANOVA Summary Table -->
+          <div class="mt-5">
+            <h4 class="font-heading font-semibold text-sm sm:text-base text-slate-800 mb-2">ตารางที่ 2 ตารางวิเคราะห์ความแปรปรวน (ANOVA Table)</h4>
+            <div class="overflow-x-auto border border-slate-300 rounded-lg">
+              <table class="w-full text-left border-collapse text-xs sm:text-sm academic-table">
+                <thead>
+                  <tr class="bg-slate-100 border-b-2 border-slate-800 text-slate-800">
+                    <th class="py-2.5 px-4 font-heading">แหล่งความแปรปรวน (Source of Variation)</th>
+                    <th class="py-2.5 px-4 font-heading text-right">ผลรวมกำลังสอง (Sum of Squares: <i>SS</i>)</th>
+                    <th class="py-2.5 px-4 font-heading text-right">องศาอิสระ (<i>df</i>)</th>
+                    <th class="py-2.5 px-4 font-heading text-right">ความแปรปรวนเฉลี่ย (Mean Square: <i>MS</i>)</th>
+                    <th class="py-2.5 px-4 font-heading text-right">ค่าสถิติ <i>F</i></th>
+                    <th class="py-2.5 px-4 font-heading text-right">Sig. (<i>p</i>-value)</th>
+                  </tr>
+                </thead>
+                <tbody id="anovaTableBody" class="divide-y divide-slate-200"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Table 3: Post-hoc Pairwise Comparison (LSD) -->
+          <div class="mt-5">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <h4 class="font-heading font-semibold text-sm sm:text-base text-slate-800">ตารางที่ 3 การเปรียบเทียบค่าเฉลี่ยรายคู่ภายหลังการวิเคราะห์ (Post-hoc Multiple Comparisons: LSD)</h4>
+              <span class="text-xs text-slate-500">พิจารณาเมื่อค่า F ในตาราง ANOVA มีนัยสำคัญทางสถิติ (Sig. &lt; .05)</span>
+            </div>
+            <div class="overflow-x-auto border border-slate-300 rounded-lg">
+              <table class="w-full text-left border-collapse text-xs sm:text-sm academic-table">
+                <thead>
+                  <tr class="bg-slate-100 border-b-2 border-slate-800 text-slate-800">
+                    <th class="py-2.5 px-4 font-heading">คู่เปรียบเทียบ (กลุ่ม I vs กลุ่ม J)</th>
+                    <th class="py-2.5 px-4 font-heading text-right">ผลต่างค่าเฉลี่ย (<span class="xbar">x</span>ᵢ − <span class="xbar">x</span>ⱼ)</th>
+                    <th class="py-2.5 px-4 font-heading text-right">Std. Error</th>
+                    <th class="py-2.5 px-4 font-heading text-right">Sig. (<i>p</i>-value)</th>
+                    <th class="py-2.5 px-4 font-heading">ผลการเปรียบเทียบรายคู่</th>
+                  </tr>
+                </thead>
+                <tbody id="anovaPosthocBody" class="divide-y divide-slate-200"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Reading Guide for ANOVA -->
+          <div class="reading-guide-box grid grid-cols-1 lg:grid-cols-12 gap-5 mt-6 pt-5 border-t border-slate-100">
+            <div class="lg:col-span-6 bg-amber-50/90 border border-amber-200 rounded-xl p-4 space-y-2">
+              <h4 class="font-heading font-bold text-sm text-amber-900 flex items-center gap-1.5">
+                <span>📐</span> ความสัมพันธ์ของตัวเลขในตาราง ANOVA ที่นักศึกษาควรรู้
+              </h4>
+              <div class="text-xs sm:text-sm text-slate-700 space-y-2">
+                <p><strong>1. แหล่งความแปรปรวน 3 บรรทัด:</strong>
+                  <br>• <em>Between Groups (ระหว่างกลุ่ม):</em> ความต่างอันเนื่องจากตัวแปรต้น (<strong><i>df</i> ระหว่างกลุ่ม = จำนวนกลุ่ม <i>k</i> − 1</strong>)
+                  <br>• <em>Within Groups (ภายในกลุ่ม):</em> ความคลาดเคลื่อนภายในกลุ่มเดียวกัน (<strong><i>df</i> ภายในกลุ่ม = จำนวนคนทั้งหมด <i>N</i> − <i>k</i></strong>)
+                  <br>• <em>Total (รวม):</em> <strong>SS รวม = SS ระหว่างกลุ่ม + SS ภายในกลุ่ม</strong> และ <strong><i>df</i> รวม = <i>N</i> − 1</strong>
+                </p>
+                <div class="flex flex-wrap items-center gap-3 bg-white p-2.5 rounded-lg border border-amber-200">
+                  <div>
+                    <strong>2. การหาค่า MS:</strong>
+                    <span class="math-formula">
+                      MS =
+                      <span class="math-frac">
+                        <span class="num">SS</span>
+                        <span class="den"><i>df</i></span>
+                      </span>
+                    </span>
+                  </div>
+                  <div>
+                    <strong>และการหาค่า <i>F</i>:</strong>
+                    <span class="math-formula">
+                      <i>F</i> =
+                      <span class="math-frac">
+                        <span class="num">MS ระหว่างกลุ่ม</span>
+                        <span class="den">MS ภายในกลุ่ม</span>
+                      </span>
+                    </span>
+                  </div>
+                </div>
+                <p><strong>3. การตัดสินใจจากค่า Sig.:</strong> ถ้า <strong>Sig. น้อยกว่า 0.05</strong> แสดงว่ามีอย่างน้อย 1 คู่ที่ค่าเฉลี่ยต่างกัน จึงต้องอ่านตารางที่ 3 (Post-hoc) ต่อว่าคู่ใดบ้างที่ต่างกัน</p>
+              </div>
+            </div>
+
+            <div class="lg:col-span-6 bg-indigo-50/70 border border-indigo-200 rounded-xl p-4 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-indigo-800 uppercase">สรุปผลการวิเคราะห์ ANOVA และการเขียนอภิปรายผล</span>
+                  <span id="anovaDecisionBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full"></span>
+                </div>
+                <p id="anovaSummaryText" class="text-xs sm:text-sm text-slate-800 mt-3 leading-relaxed bg-white p-3.5 rounded-lg border border-indigo-200"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: PRACTICE QUIZ FOR STUDENTS ==================== -->
+    <section id="tab-quiz" class="tab-panel hidden space-y-6">
+      <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200">
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <span class="text-xs font-bold text-amber-700 bg-amber-100 px-2.5 py-1 rounded">โหมดฝึกทักษะสำหรับนักศึกษา</span>
+            <h2 class="font-heading text-xl font-bold text-slate-800 mt-1">🎯 แบบฝึกหัดอ่านและแปลผลตารางสถิติ (สร้างโจทย์จากข้อมูลจริงในระบบ)</h2>
+            <p class="text-xs sm:text-sm text-slate-600">ให้นักศึกษาฝึกอ่านค่าตัวเลขจากตารางสถิติด้านซ้าย แล้วตอบคำถามเพื่อตรวจสอบความเข้าใจ พร้อมเฉลยละเอียด</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="quizTopicSelect" class="border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm bg-white font-medium">
+              <option value="indep">โจทย์: การอ่านตาราง Independent Samples t-test</option>
+              <option value="anova">โจทย์: การอ่านตาราง One-Way ANOVA</option>
+              <option value="onesample">โจทย์: การอ่านตาราง One-Sample t-test</option>
+              <option value="freq">โจทย์: การอ่านตารางความถี่และร้อยละ</option>
+            </select>
+            <button id="btnNewQuiz" class="bg-brand-600 hover:bg-brand-700 text-white font-heading font-medium text-xs sm:text-sm px-4 py-2 rounded-lg shadow-sm transition">
+              🔄 สุ่มโจทย์ชุดใหม่
+            </button>
+          </div>
+        </div>
+
+        <!-- Quiz Arena -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-5">
+          <!-- Left: Table to Read -->
+          <div class="lg:col-span-7 space-y-4">
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+              <div class="text-xs font-bold text-indigo-700 uppercase mb-1" id="quizScenarioTag">สถานการณ์วิจัย</div>
+              <h3 class="font-heading font-bold text-base text-slate-800 mb-3" id="quizScenarioTitle"></h3>
+              <div id="quizTableContainer" class="space-y-4 overflow-x-auto"></div>
+            </div>
+          </div>
+
+          <!-- Right: Questions & Check Answers -->
+          <div class="lg:col-span-5">
+            <div class="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 space-y-4">
+              <h4 class="font-heading font-bold text-base text-slate-800 border-b border-slate-100 pb-2">คำถามฝึกอ่านตาราง (ตอบให้ครบทุกข้อ)</h4>
+              <div id="quizQuestionsContainer" class="space-y-4"></div>
+
+              <div class="pt-2 flex items-center gap-3">
+                <button id="btnCheckQuiz" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-semibold py-2.5 px-4 rounded-xl shadow transition">
+                  ✅ ตรวจคำตอบและดูคำอธิบาย
+                </button>
+              </div>
+              <div id="quizFeedbackBox" class="hidden rounded-xl p-4 text-xs sm:text-sm space-y-2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal for Editing Project Title -->
+  <div id="titleModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl border border-slate-200 space-y-4">
+      <h3 class="font-heading font-bold text-lg text-slate-800">แก้ไขหัวข้อการศึกษาวิจัย</h3>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1">ชื่อหัวข้อวิจัย / โครงงาน:</label>
+          <input type="text" id="inputProjectTitle" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1">คำอธิบายเพิ่มเติม:</label>
+          <textarea id="inputProjectDesc" rows="2" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button id="btnCancelTitleModal" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg">ยกเลิก</button>
+        <button id="btnSaveTitleModal" class="px-4 py-2 text-xs font-heading font-semibold bg-brand-600 hover:bg-brand-700 text-white rounded-lg">บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 mt-10 py-4 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <p><strong>StatLab Studio</strong> — เว็บแอปพลิเคชันจำลองการเก็บข้อมูลแบบสอบถาม 5 ระดับและวิเคราะห์สถิติเพื่อการเรียนการสอน</p>
+      <p>รองรับ: ความถี่ ร้อยละ • One-Sample t-test • Independent Samples t-test • One-Way ANOVA</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
